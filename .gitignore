@@ -1,1 +1,20 @@
+# Dataset files
 datasets/
+
+# YOLO training runs
+runs/
+
+# Model weights
+models/
+*.pt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+*.egg-info/
+
+# Results
+results/
