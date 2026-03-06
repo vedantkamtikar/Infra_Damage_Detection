@@ -28,9 +28,9 @@ RUNS_DIR    = ROOT_DIR / "runs"
 
 # Training hyperparameters
 MODEL       = "yolo11m.pt"   # pretrained YOLO11m weights (auto-downloaded)
-EPOCHS      = 20             # number of training epochs
-IMAGE_SIZE  = 640            # input image size
-BATCH_SIZE  = 8       
+EPOCHS      = 5             # number of training epochs
+IMAGE_SIZE  = 320          # input image size
+BATCH_SIZE  = 8    
 WORKERS     = 4              # dataloader workers
 PATIENCE    = 10             # early stopping patience (epochs without improvement)
 PROJECT     = str(RUNS_DIR)  # where YOLO saves training runs
