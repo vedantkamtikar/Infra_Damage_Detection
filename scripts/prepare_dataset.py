@@ -2,18 +2,9 @@
 prepare_dataset.py
 
 Converts SDNET2018 dataset into YOLO detection format.
-- Cracked images get a whole-image bounding box label
-- Non-cracked images get an empty label file
+- Cracked images get a whole-image bounding box label with their specific crack class
+- Non-cracked images get a whole-image bounding box label with no_crack class (class 3)
 - Dataset is split into train/val/test (80/10/10)
-
-Classes:
-    0: deck_crack
-    1: pavement_crack
-    2: wall_crack
-    3: no_crack
-
-Usage:
-    python scripts/prepare_dataset.py
 """
 
 import os
@@ -72,14 +63,16 @@ def make_dirs():
 def get_yolo_label(class_id: int, cracked: bool) -> str:
     """
     Returns YOLO label string.
-    Cracked   → whole-image bounding box
-    No crack  → empty string (no detection)
+    Both cracked and non-cracked get a whole-image bounding box.
+    This ensures YOLO has something to learn from every single image.
+
+    YOLO format: class_id x_center y_center width height (all normalized 0-1)
+    Whole image bbox: x_center=0.5, y_center=0.5, width=1.0, height=1.0
     """
     if cracked:
-        # YOLO format: class_id x_center y_center width height (all normalized)
         return f"{class_id} 0.5 0.5 1.0 1.0\n"
     else:
-        return ""  # empty label = background / no object
+        return f"{NO_CRACK_CLASS_ID} 0.5 0.5 1.0 1.0\n"
 
 
 def split_list(items: list, train_r: float, val_r: float):
