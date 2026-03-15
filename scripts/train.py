@@ -28,7 +28,7 @@ RUNS_DIR    = ROOT_DIR / "runs"
 
 # Training hyperparameters
 MODEL       = "yolo11m.pt"   # pretrained YOLO11m weights (auto-downloaded)
-EPOCHS      = 50             # number of training epochs
+EPOCHS      = 20             # number of training epochs
 IMAGE_SIZE  = 640            # input image size
 BATCH_SIZE  = 8    
 WORKERS     = 4              # dataloader workers
@@ -91,6 +91,7 @@ def train():
         weight_decay= 0.0005,
         augment     = True,         # enable data augmentation
         verbose     = True,
+        amp = False,
     )
 
     # ─────────────────────────────────────────
