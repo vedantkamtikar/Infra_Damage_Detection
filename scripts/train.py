@@ -11,6 +11,7 @@ Usage:
     Resume run : set RESUME = True, then python scripts/train.py
 """
 
+import shutil
 import torch
 from ultralytics import YOLO
 from pathlib import Path
@@ -26,13 +27,13 @@ RUNS_DIR    = ROOT_DIR / "runs"
 
 # Training hyperparameters
 MODEL       = "yolo11m.pt"   # pretrained YOLO11m weights (auto-downloaded)
-EPOCHS      = 50             # number of training epochs
+EPOCHS      = 100             # number of training epochs
 IMAGE_SIZE  = 640            # input image size
 BATCH_SIZE  = 8              # safe for 6.4GB VRAM at imgsz=640
 WORKERS     = 4              # dataloader workers
-PATIENCE    = 15             # early stopping patience (epochs without improvement)
+PATIENCE    = 20             # early stopping patience (epochs without improvement)
 PROJECT     = str(RUNS_DIR)  # where YOLO saves training runs
-RUN_NAME    = "enim_yolo11m_run3"
+RUN_NAME    = "ENIM_run5"
 
 # Set to True to resume from last checkpoint instead of starting fresh
 RESUME      = False
@@ -99,28 +100,29 @@ def train():
         patience     = PATIENCE,
         project      = PROJECT,
         name         = RUN_NAME,
-        device       = 0,            # GPU 0 (RTX 4050)
+        device       = 0,
         pretrained   = True,
         optimizer    = "AdamW",
-        lr0          = 0.001,        # initial learning rate
+        lr0          = 0.0001,       # lower LR for tight box fine-tuning
+        lrf          = 0.01,         # final LR ratio
         weight_decay = 0.0005,
-        augment      = True,         # enable data augmentation
+        freeze       = 10,           # freeze backbone, train detection head only
+        augment      = True,
         verbose      = True,
-        amp          = False,        # disabled: causes nan loss with AdamW on this dataset
-        resume       = RESUME,       # resume from last.pt if True
-        exist_ok     = RESUME,       # allow writing to existing run folder when resuming
+        amp          = False,        # keep False — AMP causes NaN losses with AdamW
+        resume       = RESUME,
+        exist_ok     = RESUME,
     )
 
     # ─────────────────────────────────────────
     # SAVE BEST WEIGHTS
     # ─────────────────────────────────────────
     best_weights = Path(results.save_dir) / "weights" / "best.pt"
-    dest_weights = MODELS_DIR / "best_run3.pt"
+    dest_weights = MODELS_DIR / "best_run5.pt"   
 
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
     if best_weights.exists():
-        import shutil
         shutil.copy2(best_weights, dest_weights)
         print(f"\n[✓] Best weights saved to: {dest_weights}")
     else:
