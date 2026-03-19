@@ -21,7 +21,7 @@ from pathlib import Path
 # ─────────────────────────────────────────────
 
 ROOT_DIR    = Path(__file__).resolve().parent.parent
-YAML_PATH   = ROOT_DIR / "datasets" / "ENIM" / "data.yaml"
+YAML_PATH   = ROOT_DIR / "datasets" / "CRACKS" / "data.yaml"
 MODELS_DIR  = ROOT_DIR / "models"
 RUNS_DIR    = ROOT_DIR / "runs"
 
@@ -33,7 +33,7 @@ BATCH_SIZE  = 8              # safe for 6.4GB VRAM at imgsz=640
 WORKERS     = 4              # dataloader workers
 PATIENCE    = 20             # early stopping patience (epochs without improvement)
 PROJECT     = str(RUNS_DIR)  # where YOLO saves training runs
-RUN_NAME    = "ENIM_run5"
+RUN_NAME    = "Run7"
 
 # Set to True to resume from last checkpoint instead of starting fresh
 RESUME      = False
@@ -106,7 +106,7 @@ def train():
         lr0          = 0.0001,       # lower LR for tight box fine-tuning
         lrf          = 0.01,         # final LR ratio
         weight_decay = 0.0005,
-        freeze       = 10,           # freeze backbone, train detection head only
+        freeze       = 0,           # freeze backbone, train detection head only
         augment      = True,
         verbose      = True,
         amp          = False,        # keep False — AMP causes NaN losses with AdamW
@@ -118,7 +118,7 @@ def train():
     # SAVE BEST WEIGHTS
     # ─────────────────────────────────────────
     best_weights = Path(results.save_dir) / "weights" / "best.pt"
-    dest_weights = MODELS_DIR / "best_run5.pt"   
+    dest_weights = MODELS_DIR / "best_run7.pt"   
 
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
 

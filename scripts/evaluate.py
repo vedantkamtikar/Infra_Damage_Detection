@@ -1,7 +1,7 @@
 """
 evaluate.py
 
-Evaluates the trained YOLO11m model on the ENIM crack detection val set.
+Evaluates the trained YOLO11m model on the CRACKS crack detection val set.
 Prints per-class metrics, mAP50, mAP50-95, and saves results.
 
 Usage:
@@ -20,11 +20,11 @@ from pathlib import Path
 # ─────────────────────────────────────────────
 
 ROOT_DIR        = Path(__file__).resolve().parent.parent
-YAML_PATH       = ROOT_DIR / "datasets" / "ENIM" / "data.yaml"
+YAML_PATH       = ROOT_DIR / "datasets" / "CRACKS" / "data.yaml"
 MODELS_DIR      = ROOT_DIR / "models"
 RUNS_DIR        = ROOT_DIR / "runs"
 
-DEFAULT_WEIGHTS = MODELS_DIR / "best_run5.pt"   # FIX: was hardcoded to enim_run4
+DEFAULT_WEIGHTS = MODELS_DIR / "best_run7.pt"
 
 CLASS_NAMES     = ["crack"]
 
@@ -70,15 +70,15 @@ def evaluate(weights_path: Path, yaml_path: Path):
     results = model.val(
         data      = str(yaml_path),
         split     = "val",            # val split (test split has no labels)
-        imgsz     = 640,
+        imgsz     = 640,              # CRACKS dataset is 640x640 natively
         batch     = 8,
         conf      = 0.001,            # low threshold for proper mAP computation
         iou       = 0.6,              # standard IoU threshold
         device    = 0 if torch.cuda.is_available() else "cpu",
         verbose   = True,
-        amp       = False,            # FIX: keep consistent with training
+        amp       = False,            # keep consistent with training
         project   = str(ROOT_DIR / "results"),
-        name      = f"{Path(weights_path).stem}_eval",  # FIX: was hardcoded to enim_run4_eval
+        name      = f"{Path(weights_path).stem}_eval",
         plots     = True,             # saves confusion matrix, PR curve etc.
         save_json = False,
         exist_ok  = True,             # overwrite previous eval results
@@ -122,7 +122,7 @@ def evaluate(weights_path: Path, yaml_path: Path):
 # ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Evaluate YOLO11m on ENIM crack detection val set")
+    parser = argparse.ArgumentParser(description="Evaluate YOLO11m on CRACKS val set")
     parser.add_argument(
         "--weights",
         type=str,
