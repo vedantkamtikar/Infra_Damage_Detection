@@ -20,7 +20,7 @@ from pathlib import Path
 # ─────────────────────────────────────────────
 
 ROOT_DIR        = Path(__file__).resolve().parent.parent
-DEFAULT_CSV     = ROOT_DIR / "runs" / "sdnet_yolo11m" / "results.csv"
+DEFAULT_CSV     = ROOT_DIR / "runs" / "run7" / "results.csv"
 OUTPUT_DIR      = ROOT_DIR / "results"
 OUTPUT_FILE     = OUTPUT_DIR / "training_curves.png"
 
@@ -41,7 +41,7 @@ def plot(csv_path: Path):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     fig = plt.figure(figsize=(16, 10))
-    fig.suptitle("YOLO11m Training Results — SDNET2018", fontsize=14, fontweight="bold", y=0.98)
+    fig.suptitle("YOLO11m Training Results", fontsize=14, fontweight="bold", y=0.98)
 
     gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.4, wspace=0.35)
 

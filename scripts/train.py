@@ -28,8 +28,8 @@ RUNS_DIR    = ROOT_DIR / "runs"
 # Training hyperparameters
 MODEL       = "yolo11m.pt"   # pretrained YOLO11m weights (auto-downloaded)
 EPOCHS      = 100             # number of training epochs
-IMAGE_SIZE  = 640            # input image size
-BATCH_SIZE  = 8              # safe for 6.4GB VRAM at imgsz=640
+IMAGE_SIZE  = 800           # input image size
+BATCH_SIZE  = 6              # safe for 6.4GB VRAM
 WORKERS     = 4              # dataloader workers
 PATIENCE    = 20             # early stopping patience (epochs without improvement)
 PROJECT     = str(RUNS_DIR)  # where YOLO saves training runs
@@ -103,13 +103,17 @@ def train():
         device       = 0,
         pretrained   = True,
         optimizer    = "AdamW",
-        lr0          = 0.0001,       # lower LR for tight box fine-tuning
-        lrf          = 0.01,         # final LR ratio
+
+        lr0          = 0.0005,
+        lrf          = 0.1,
         weight_decay = 0.0005,
-        freeze       = 0,           # freeze backbone, train detection head only
+        warmup_epochs= 3,
+
+        freeze       = 10,
         augment      = True,
         verbose      = True,
-        amp          = False,        # keep False — AMP causes NaN losses with AdamW
+        amp          = False,
+
         resume       = RESUME,
         exist_ok     = RESUME,
     )

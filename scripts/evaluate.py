@@ -70,7 +70,7 @@ def evaluate(weights_path: Path, yaml_path: Path):
     results = model.val(
         data      = str(yaml_path),
         split     = "val",            # val split (test split has no labels)
-        imgsz     = 640,              # CRACKS dataset is 640x640 natively
+        imgsz     = 800,              # CRACKS dataset is 640x640 natively
         batch     = 8,
         conf      = 0.001,            # low threshold for proper mAP computation
         iou       = 0.6,              # standard IoU threshold
