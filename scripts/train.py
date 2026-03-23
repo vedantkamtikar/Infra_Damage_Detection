@@ -27,13 +27,13 @@ RUNS_DIR    = ROOT_DIR / "runs"
 
 # Training hyperparameters
 MODEL       = "yolo11m.pt"   # pretrained YOLO11m weights (auto-downloaded)
-EPOCHS      = 100             # number of training epochs
+EPOCHS      = 300             # number of training epochs
 IMAGE_SIZE  = 800           # input image size
 BATCH_SIZE  = 6              # safe for 6.4GB VRAM
 WORKERS     = 4              # dataloader workers
-PATIENCE    = 20             # early stopping patience (epochs without improvement)
+PATIENCE    = 30             # early stopping patience (epochs without improvement)
 PROJECT     = str(RUNS_DIR)  # where YOLO saves training runs
-RUN_NAME    = "Run7"
+RUN_NAME    = "Run8"
 
 # Set to True to resume from last checkpoint instead of starting fresh
 RESUME      = False
@@ -104,12 +104,12 @@ def train():
         pretrained   = True,
         optimizer    = "AdamW",
 
-        lr0          = 0.0005,
-        lrf          = 0.1,
+        lr0          = 0.0001,
+        lrf          = 0.01,
         weight_decay = 0.0005,
         warmup_epochs= 3,
 
-        freeze       = 10,
+        freeze       = 0,
         augment      = True,
         verbose      = True,
         amp          = False,
@@ -122,7 +122,7 @@ def train():
     # SAVE BEST WEIGHTS
     # ─────────────────────────────────────────
     best_weights = Path(results.save_dir) / "weights" / "best.pt"
-    dest_weights = MODELS_DIR / "best_run7.pt"   
+    dest_weights = MODELS_DIR / "best_run8.pt"   
 
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
