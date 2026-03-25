@@ -28,8 +28,8 @@ RUNS_DIR    = ROOT_DIR / "runs"
 # Training hyperparameters
 MODEL       = "yolo11m.pt"   # pretrained YOLO11m weights (auto-downloaded)
 EPOCHS      = 300             # number of training epochs
-IMAGE_SIZE  = 800           # input image size
-BATCH_SIZE  = 6              # safe for 6.4GB VRAM
+IMAGE_SIZE  = 640          # input image size
+BATCH_SIZE  = 12              # safe for 6.4GB VRAM
 WORKERS     = 4              # dataloader workers
 PATIENCE    = 30             # early stopping patience (epochs without improvement)
 PROJECT     = str(RUNS_DIR)  # where YOLO saves training runs
@@ -109,10 +109,10 @@ def train():
         weight_decay = 0.0005,
         warmup_epochs= 3,
 
-        freeze       = 0,
+        freeze       = 10,
         augment      = True,
         verbose      = True,
-        amp          = False,
+        amp          = False,  
 
         resume       = RESUME,
         exist_ok     = RESUME,

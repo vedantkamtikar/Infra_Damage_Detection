@@ -24,7 +24,7 @@ YAML_PATH       = ROOT_DIR / "datasets" / "CRACKS" / "data.yaml"
 MODELS_DIR      = ROOT_DIR / "models"
 RUNS_DIR        = ROOT_DIR / "runs"
 
-DEFAULT_WEIGHTS = MODELS_DIR / "best_run7.pt"
+DEFAULT_WEIGHTS = MODELS_DIR / "best_run8.pt"
 
 CLASS_NAMES     = ["crack"]
 
@@ -70,10 +70,10 @@ def evaluate(weights_path: Path, yaml_path: Path):
     results = model.val(
         data      = str(yaml_path),
         split     = "val",            # val split (test split has no labels)
-        imgsz     = 800,              # CRACKS dataset is 640x640 natively
+        imgsz     = 640,              # CRACKS dataset is 640x640 natively
         batch     = 8,
-        conf      = 0.001,            # low threshold for proper mAP computation
-        iou       = 0.1,              # standard IoU threshold
+        conf      = 0.2,            # low threshold for proper mAP computation
+        iou       = 0.3,              # standard IoU threshold
         device    = 0 if torch.cuda.is_available() else "cpu",
         verbose   = True,
         amp       = False,            # keep consistent with training
