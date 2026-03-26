@@ -38,7 +38,7 @@ from drone.db import DetectionDB
 # ─────────────────────────────────────────────
 
 ROOT_DIR        = Path(__file__).resolve().parent.parent
-WEIGHTS         = ROOT_DIR / "models" / "best_run7.pt"
+WEIGHTS         = ROOT_DIR / "models" / "best_run8.pt"
 
 # Detection
 CONF_THRESHOLD  = 0.35        # minimum confidence to log a detection
