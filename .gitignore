@@ -20,4 +20,4 @@ __pycache__/
 results/
 
 scripts/download_roboflow_dataset.py
-scripts\huggingface_crack_model.py
+scripts/huggingface_crack_model.py
