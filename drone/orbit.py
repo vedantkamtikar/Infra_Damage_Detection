@@ -11,7 +11,7 @@ import threading
 is_orbiting = True
 
 def run_vision_and_logging():
-    """This runs completely in the background, out of the way of your flight loop."""
+    """Background thread for YOLO inference and SQL logging."""
     target_fps = 18 
     frame_delay = 1.0 / target_fps
     vision_client = airsim.MultirotorClient()
@@ -29,15 +29,19 @@ def run_vision_and_logging():
         confidence REAL,
         x REAL,
         y REAL,
-        z REAL
+        z REAL,
+        frame BLOB
     )
     """)
     conn.commit()
 
+    # --- THROTTLE SETTINGS ---
+    last_log_time = 0
+    log_cooldown = 2.0  # Only log to DB once every 2 seconds
+
     while is_orbiting:
         start_vision_time = time.time()
         
-        # Using Camera "0" as requested
         responses = vision_client.simGetImages([
             airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)
         ])
@@ -45,70 +49,85 @@ def run_vision_and_logging():
         if responses and len(responses) > 0:
             response = responses[0]
             img1d = np.frombuffer(response.image_data_uint8, dtype=np.uint8)
-            
-            # AirSim natively outputs BGR in this array, so we just reshape it and hand it to YOLO
             img_bgr = img1d.reshape(response.height, response.width, 3)
 
-            results = model(img_bgr, conf=0.25, verbose=False)
-
-            annotated_frame = results[0].plot() 
-            cv2.imshow("Structural Damage Detection - Live View", annotated_frame)
-            cv2.waitKey(1) 
+            # UPDATED: Changed conf from 0.25 to 0.3 to exclude low-confidence detections
+            results = model(img_bgr, conf=0.3, verbose=False)
+            
+            # .copy() prevents the "readonly" OpenCV error
+            annotated_frame = results[0].plot().copy() 
 
             state = vision_client.getMultirotorState()
             pos = state.kinematics_estimated.position
             
             detections_found = False
+            max_conf = 0.0 
+            current_time = time.time()
 
             for r in results:
                 for box in r.boxes:
-                    cls = int(box.cls[0])
                     conf = float(box.conf[0])
-                    label = model.names[cls]
+                    label = model.names[int(box.cls[0])]
 
-                    cursor.execute("""
-                        INSERT INTO detections (timestamp, class, confidence, x, y, z)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    """, (time.time(), label, conf, pos.x_val, pos.y_val, pos.z_val))
+                    if conf > max_conf:
+                        max_conf = conf
                     
                     detections_found = True
+
+                    # Only write to DB if cooldown has passed
+                    if current_time - last_log_time > log_cooldown:
+                        success, encoded_image = cv2.imencode('.jpg', img_bgr)
+                        frame_blob = encoded_image.tobytes() if success else None
+
+                        cursor.execute("""
+                            INSERT INTO detections (timestamp, class, confidence, x, y, z, frame)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, (current_time, label, conf, pos.x_val, pos.y_val, pos.z_val, frame_blob))
+                        
+                        last_log_time = current_time
+                        conn.commit()
             
             if detections_found:
-                conn.commit()
+                cv2.putText(annotated_frame, "Damage Detected", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(annotated_frame, "Logging Enabled" if (current_time - last_log_time < 0.1) else "Logging Cooldown", 
+                            (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
-        # FIX: Pushed the throttle to 30 FPS (0.033 seconds per frame)
+            # --- ALWAYS SHOWN: CONFIDENCE BAR ---
+            bar_x, bar_y = 20, 110
+            bar_w, bar_h = 200, 20
+            cv2.putText(annotated_frame, f"Confidence: {max_conf:.2f}", (bar_x, bar_y - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+            cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (50, 50, 50), -1)
+            fill_w = int(bar_w * max_conf)
+            if fill_w > 0:
+                cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + fill_w, bar_y + bar_h), (255, 191, 0), -1)
+            cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (255, 255, 255), 1)
+
+            cv2.imshow("Live Inspection Feed", annotated_frame)
+            cv2.waitKey(1) 
+
         elapsed = time.time() - start_vision_time
         if elapsed < frame_delay:
             time.sleep(frame_delay - elapsed)
 
-    # Cleanup when is_orbiting becomes False
     cv2.destroyAllWindows()
     conn.close()
 
 def main():
     global is_orbiting
-    
-    # Start the YOLO vision script in a background thread
     vision_thread = threading.Thread(target=run_vision_and_logging)
     vision_thread.start()
 
-    # ==============================
-    # YOUR EXACT UNCHANGED LOOP
-    # ==============================
     client = airsim.MultirotorClient()
     client.confirmConnection()
     client.enableApiControl(True)
     client.armDisarm(True)
 
-    start_global_x = 19.00
-    start_global_y = 0.00
-    center_x = 0.00 - start_global_x
-    center_y = 0.00 - start_global_y
-
+    # Orbit Parameters
+    start_global_x, start_global_y = 19.0, 0.0
+    center_x, center_y = -start_global_x, -start_global_y
     radius = math.sqrt(center_x**2 + center_y**2)
-    flight_z = -10.0
-    velocity = 3.0 # meters per second
-    
+    flight_z, velocity = -10.0, 3.0
     omega = velocity / radius 
     orbit_time = (2 * math.pi) / omega
 
@@ -117,44 +136,25 @@ def main():
     client.moveToZAsync(flight_z, 3.0).join()
 
     start_angle = math.atan2(0 - center_y, 0 - center_x)
-
-    print(f"Starting POI orbit. Estimated time: {orbit_time:.1f} seconds...")
     start_time = time.time()
     
-    # Control loop running at roughly 20Hz
     while time.time() - start_time < orbit_time:
         t = time.time() - start_time
-        
         theta = start_angle + (omega * t)
-        
         vx = -radius * omega * math.sin(theta)
         vy = radius * omega * math.cos(theta)
-        
         yaw_deg = math.degrees(theta + math.pi)
         
-        client.moveByVelocityZAsync(
-            vx, vy, flight_z, 
-            duration=0.1, 
-            drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom, 
-            yaw_mode=airsim.YawMode(is_rate=False, yaw_or_rate=yaw_deg)
-        )
-        
+        client.moveByVelocityZAsync(vx, vy, flight_z, duration=0.1, 
+                                    drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom, 
+                                    yaw_mode=airsim.YawMode(is_rate=False, yaw_or_rate=yaw_deg))
         time.sleep(0.05)
 
-    print("Orbit complete. Stopping...")
-    
-    # Signal the background thread to shut down safely
     is_orbiting = False 
-
-    client.moveByVelocityAsync(0, 0, 0, 1).join()
-    client.moveToPositionAsync(0, 0, flight_z, velocity, yaw_mode=airsim.YawMode(is_rate=False, yaw_or_rate=0)).join()
     client.landAsync().join()
     client.armDisarm(False)
     client.enableApiControl(False)
-    
-    # Wait for the vision thread to finish its last image before exiting completely
     vision_thread.join()
-    print("Done.")
 
 if __name__ == "__main__":
     main()
