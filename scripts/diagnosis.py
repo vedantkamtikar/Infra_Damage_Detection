@@ -1,3 +1,8 @@
+'''
+It is for testing errors in the model/script/whatever your issue is so use the code you get from claude
+and type it here
+'''
+
 import os
 from pathlib import Path
 from ultralytics import YOLO
