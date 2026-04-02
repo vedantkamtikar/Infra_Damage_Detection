@@ -24,7 +24,7 @@ YAML_PATH       = ROOT_DIR / "datasets" / "CRACKS" / "data.yaml"
 MODELS_DIR      = ROOT_DIR / "models"
 RUNS_DIR        = ROOT_DIR / "runs"
 
-DEFAULT_WEIGHTS = MODELS_DIR / "best_run8.pt"
+DEFAULT_WEIGHTS = MODELS_DIR / "best_run9.pt"
 
 CLASS_NAMES     = ["crack"]
 

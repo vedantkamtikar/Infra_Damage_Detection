@@ -17,7 +17,7 @@ def run_vision_and_logging():
     vision_client = airsim.MultirotorClient()
     vision_client.confirmConnection()
     
-    model = YOLO("models/best_run8.pt")
+    model = YOLO("models/best_run9.pt")
     
     conn = sqlite3.connect("detections.db")
     cursor = conn.cursor()
@@ -104,6 +104,7 @@ def run_vision_and_logging():
             cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (255, 255, 255), 1)
 
             cv2.imshow("Live Inspection Feed", annotated_frame)
+            cv2.imwrite("latest_frame.jpg", annotated_frame)  # share frame with web UI
             cv2.waitKey(1) 
 
         elapsed = time.time() - start_vision_time
