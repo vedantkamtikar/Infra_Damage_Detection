@@ -130,31 +130,6 @@ function MissionControl() {
 
   const orbit = missionData?.orbit || {};
   const vision = missionData?.vision || {};
-  const pipeline = missionData?.pipeline || [];
-  const radius = orbit.radius_m || 19;
-
-  // SVG orbit visualization
-  const svgSize = 320;
-  const cx = svgSize / 2;
-  const cy = svgSize / 2;
-  const orbitR = svgSize * 0.35;
-  const numWP = 12;
-
-  const waypointPositions = Array.from({ length: numWP }, (_, i) => {
-    const angle = (2 * Math.PI * i) / numWP - Math.PI / 2;
-    return {
-      x: cx + orbitR * Math.cos(angle),
-      y: cy + orbitR * Math.sin(angle),
-    };
-  });
-
-  const pipelineColors = [
-    'var(--accent-cyan)',
-    'var(--accent-blue)',
-    'var(--accent-purple)',
-    'var(--accent-green)',
-    'var(--accent-orange)',
-  ];
 
   return (
     <div className="animate-slide-up" id="mission-control-page">
@@ -234,7 +209,7 @@ function MissionControl() {
           justifyContent: 'center',
           position: 'relative',
         }}
-        id="live-feed-container"
+          id="live-feed-container"
         >
           {feedActive || missionRunning ? (
             <img
@@ -326,148 +301,50 @@ function MissionControl() {
         )}
       </div>
 
-      {/* ══ Orbit Viz + Params ══ */}
-      <div className="section-grid">
-        {/* Orbit Visualization */}
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title"><span>🛸</span> Orbit Path</div>
-            <span className="card-subtitle">Top-down view (NED frame)</span>
-          </div>
-          <div className="orbit-viz" id="orbit-visualization">
-            <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`}>
-              {/* Background grid */}
-              {Array.from({ length: 7 }, (_, i) => {
-                const pos = (svgSize / 6) * i;
-                return (
-                  <g key={i}>
-                    <line x1={pos} y1={0} x2={pos} y2={svgSize}
-                          stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                    <line x1={0} y1={pos} x2={svgSize} y2={pos}
-                          stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                  </g>
-                );
-              })}
-
-              {/* Orbit circle */}
-              <circle cx={cx} cy={cy} r={orbitR}
-                      fill="none" stroke="var(--accent-cyan)" strokeWidth="1.5"
-                      strokeDasharray="6 3" opacity="0.4" />
-              <circle cx={cx} cy={cy} r={orbitR}
-                      fill="rgba(0, 212, 255, 0.03)" stroke="none" />
-
-              {/* Center building marker */}
-              <rect x={cx - 14} y={cy - 14} width={28} height={28}
-                    rx={6} fill="rgba(139, 92, 246, 0.15)"
-                    stroke="var(--accent-purple)" strokeWidth="1.5" />
-              <text x={cx} y={cy + 4} textAnchor="middle"
-                    fill="var(--accent-purple)" fontSize="14">🏢</text>
-
-              {/* Waypoint dots */}
-              {waypointPositions.map((wp, i) => (
-                <g key={i}>
-                  <circle cx={wp.x} cy={wp.y} r={5}
-                          fill="var(--accent-cyan)" opacity={0.8} />
-                  <circle cx={wp.x} cy={wp.y} r={8}
-                          fill="none" stroke="var(--accent-cyan)" strokeWidth="1" opacity={0.3} />
-                </g>
-              ))}
-
-              {/* Animated drone dot */}
-              <g style={{
-                animation: missionRunning ? 'orbitDot 4s linear infinite' : 'none',
-                transformOrigin: `${cx}px ${cy}px`,
-              }}>
-                <circle cx={cx + orbitR} cy={cy} r={7}
-                        fill={missionRunning ? 'var(--accent-green)' : 'var(--text-muted)'} />
-                <circle cx={cx + orbitR} cy={cy} r={11}
-                        fill="none"
-                        stroke={missionRunning ? 'var(--accent-green)' : 'var(--text-muted)'}
-                        strokeWidth="1.5" opacity="0.5" />
-                <text x={cx + orbitR} y={cy + 3.5} textAnchor="middle"
-                      fill="var(--bg-primary)" fontSize="8" fontWeight="800">✦</text>
-              </g>
-
-              {/* Labels */}
-              <text x={cx} y={cy + orbitR + 22} textAnchor="middle"
-                    fill="var(--text-muted)" fontSize="10" fontFamily="var(--font-mono)">
-                r = {radius}m
-              </text>
-              <text x={cx} y={20} textAnchor="middle"
-                    fill="var(--text-muted)" fontSize="9">
-                ↑ North (X+)
-              </text>
-            </svg>
-          </div>
-        </div>
-
-        {/* Mission Parameters */}
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title"><span>⚙️</span> Mission Parameters</div>
-          </div>
-          <div className="param-grid">
-            <div className="param-item">
-              <span className="param-label">Orbit Radius</span>
-              <span className="param-value text-accent">{orbit.radius_m || 19}m</span>
-            </div>
-            <div className="param-item">
-              <span className="param-label">Altitude</span>
-              <span className="param-value text-green">{orbit.altitude_m || 10}m</span>
-            </div>
-            <div className="param-item">
-              <span className="param-label">Velocity</span>
-              <span className="param-value text-purple">{orbit.velocity_mps || 3} m/s</span>
-            </div>
-            <div className="param-item">
-              <span className="param-label">Center</span>
-              <span className="param-value" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                ({orbit.center?.x || 0}, {orbit.center?.y || 0})
-              </span>
-            </div>
-            <div className="param-item">
-              <span className="param-label">Target FPS</span>
-              <span className="param-value text-orange">{vision.target_fps || 18}</span>
-            </div>
-            <div className="param-item">
-              <span className="param-label">Log Cooldown</span>
-              <span className="param-value" style={{ color: 'var(--text-primary)' }}>
-                {vision.log_cooldown_s || 2}s
-              </span>
-            </div>
-            <div className="param-item">
-              <span className="param-label">Camera</span>
-              <span className="param-value" style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {vision.camera || 'Camera 0'}
-              </span>
-            </div>
-            <div className="param-item">
-              <span className="param-label">Conf Threshold</span>
-              <span className="param-value text-accent">{missionData?.conf_threshold || 0.3}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Perception Pipeline */}
+      {/* ══ Mission Parameters ══ */}
       <div className="card" style={{ marginTop: '20px' }}>
         <div className="card-header">
-          <div className="card-title"><span>🔄</span> Perception Pipeline</div>
-          <span className="card-subtitle">Frame-by-frame processing flow</span>
+          <div className="card-title"><span>⚙️</span> Mission Parameters</div>
         </div>
-        <div className="pipeline-steps" id="perception-pipeline">
-          {pipeline.map((step, i) => (
-            <div className="pipeline-step" key={i}>
-              <div className="pipeline-dot" style={{
-                background: `${pipelineColors[i]}18`,
-                color: pipelineColors[i],
-                border: `1.5px solid ${pipelineColors[i]}40`,
-              }}>
-                {i + 1}
-              </div>
-              <div className="pipeline-step-text">{step}</div>
-            </div>
-          ))}
+        <div className="param-grid">
+          <div className="param-item">
+            <span className="param-label">Orbit Radius</span>
+            <span className="param-value text-accent">{orbit.radius_m || 19}m</span>
+          </div>
+          <div className="param-item">
+            <span className="param-label">Altitude</span>
+            <span className="param-value text-green">{orbit.altitude_m || 10}m</span>
+          </div>
+          <div className="param-item">
+            <span className="param-label">Velocity</span>
+            <span className="param-value text-purple">{orbit.velocity_mps || 3} m/s</span>
+          </div>
+          <div className="param-item">
+            <span className="param-label">Center</span>
+            <span className="param-value" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              ({orbit.center?.x || 0}, {orbit.center?.y || 0})
+            </span>
+          </div>
+          <div className="param-item">
+            <span className="param-label">Target FPS</span>
+            <span className="param-value text-orange">{vision.target_fps || 18}</span>
+          </div>
+          <div className="param-item">
+            <span className="param-label">Log Cooldown</span>
+            <span className="param-value" style={{ color: 'var(--text-primary)' }}>
+              {vision.log_cooldown_s || 2}s
+            </span>
+          </div>
+          <div className="param-item">
+            <span className="param-label">Camera</span>
+            <span className="param-value" style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+              {vision.camera || 'Camera 0'}
+            </span>
+          </div>
+          <div className="param-item">
+            <span className="param-label">Conf Threshold</span>
+            <span className="param-value text-accent">{missionData?.conf_threshold || 0.3}</span>
+          </div>
         </div>
       </div>
 

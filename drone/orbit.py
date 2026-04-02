@@ -12,12 +12,12 @@ is_orbiting = True
 
 def run_vision_and_logging():
     """Background thread for YOLO inference and SQL logging."""
-    target_fps = 18 
+    target_fps = 24
     frame_delay = 1.0 / target_fps
     vision_client = airsim.MultirotorClient()
     vision_client.confirmConnection()
     
-    model = YOLO("models/best_run9.pt")
+    model = YOLO("runs\\Run9\\weights\\best.pt")
     
     conn = sqlite3.connect("detections.db")
     cursor = conn.cursor()
