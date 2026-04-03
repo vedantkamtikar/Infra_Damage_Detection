@@ -82,13 +82,6 @@ function Dashboard({ onNavigate }) {
             max {stats?.max_confidence ? (stats.max_confidence * 100).toFixed(1) + '%' : '—'}
           </div>
         </div>
-        <div className="stat-card purple">
-          <div className="stat-label">Detection Classes</div>
-          <div className="stat-value purple">{stats?.unique_classes?.length ?? 0}</div>
-          <div className="stat-detail">
-            {stats?.unique_classes?.join(', ') || 'none'}
-          </div>
-        </div>
         <div className="stat-card orange">
           <div className="stat-label">Confidence Range</div>
           <div className="stat-value orange">

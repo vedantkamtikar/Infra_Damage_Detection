@@ -3,7 +3,7 @@ from huggingface_hub import hf_hub_download
 import cv2 # Optional, for more advanced saving/showing
 
 # 1. Download/Path (Already done, but kept for context)
-model_path = hf_hub_download(repo_id="Harisanth/Pothole-Finetuned-YOLOv8", filename="best.pt")
+model_path = "pothole_hf.pt"
 
 # 2. Load the model
 model = YOLO(model_path)

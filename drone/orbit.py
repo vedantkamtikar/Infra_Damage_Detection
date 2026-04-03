@@ -12,12 +12,12 @@ is_orbiting = True
 
 def run_vision_and_logging():
     """Background thread for YOLO inference and SQL logging."""
-    target_fps = 24
+    target_fps =30
     frame_delay = 1.0 / target_fps
     vision_client = airsim.MultirotorClient()
     vision_client.confirmConnection()
     
-    model = YOLO("runs\\Run9\\weights\\best.pt")
+    model = YOLO('runs\\Run9\\weights\\best_crack_26.pt').to('cuda')
     
     conn = sqlite3.connect("detections.db")
     cursor = conn.cursor()
@@ -51,8 +51,7 @@ def run_vision_and_logging():
             img1d = np.frombuffer(response.image_data_uint8, dtype=np.uint8)
             img_bgr = img1d.reshape(response.height, response.width, 3)
 
-            # UPDATED: Changed conf from 0.25 to 0.3 to exclude low-confidence detections
-            results = model(img_bgr, conf=0.3, verbose=False)
+            results = model(img_bgr, conf=0.45, verbose=False)
             
             # .copy() prevents the "readonly" OpenCV error
             annotated_frame = results[0].plot().copy() 
@@ -76,7 +75,7 @@ def run_vision_and_logging():
 
                     # Only write to DB if cooldown has passed
                     if current_time - last_log_time > log_cooldown:
-                        success, encoded_image = cv2.imencode('.jpg', img_bgr)
+                        success, encoded_image = cv2.imencode('.jpg', annotated_frame)
                         frame_blob = encoded_image.tobytes() if success else None
 
                         cursor.execute("""

@@ -1,23 +1,84 @@
-# Dataset files
-datasets/
+# ═══════════════════════════════════════════════
+# Python
+# ═══════════════════════════════════════════════
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+venv/
+.venv/
+env/
+.env
 
-# YOLO training runs
+# ═══════════════════════════════════════════════
+# YOLO / ML Artifacts
+# ═══════════════════════════════════════════════
 runs/
-
-# Model weights
 models/
 *.pt
+*.onnx
+*.engine
+*.torchscript
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
+# Datasets (large / downloaded via scripts)
+datasets/
 
-# Virtual environment
-*.egg-info/
-
-# Results
+# Training & evaluation outputs
 results/
+outputs/
+graphs/
 
+# ═══════════════════════════════════════════════
+# Runtime / Streaming Files
+# ═══════════════════════════════════════════════
+latest_frame.jpg
+*.db
+*.db-journal
+
+# ═══════════════════════════════════════════════
+# Node / React (web_ui)
+# ═══════════════════════════════════════════════
+node_modules/
+web_ui/node_modules/
+web_ui/build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# ═══════════════════════════════════════════════
+# IDE & Editor
+# ═══════════════════════════════════════════════
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ═══════════════════════════════════════════════
+# OS Generated
+# ═══════════════════════════════════════════════
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# ═══════════════════════════════════════════════
+# Misc
+# ═══════════════════════════════════════════════
+*.log
+*.bak
+*.tmp
+*.temp
+.cache/
+
+# One-off / deprecated scripts
 scripts/download_roboflow_dataset.py
 scripts/huggingface_crack_model.py

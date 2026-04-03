@@ -113,6 +113,24 @@ function MissionControl() {
     }
   };
 
+  const handleRoadInspect = async () => {
+    setStartError(null);
+    try {
+      const res = await fetch(`${API}/mission/road-inspect/start`, { method: 'POST' });
+      const data = await res.json();
+      if (data.error) {
+        setStartError(data.error);
+      } else {
+        setMissionRunning(true);
+        setMissionPid(data.pid);
+        setMissionElapsed(0);
+        setFeedActive(true);
+      }
+    } catch (err) {
+      setStartError('Cannot reach server. Is FastAPI running?');
+    }
+  };
+
   const formatElapsed = (secs) => {
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
@@ -179,14 +197,30 @@ function MissionControl() {
               </span>
             )}
             {!missionRunning ? (
-              <button
-                className="btn btn-primary"
-                onClick={handleStart}
-                id="start-inspection-btn"
-                style={{ padding: '8px 20px', fontSize: '13px' }}
-              >
-                🚀 Start Inspection
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleStart}
+                  id="start-inspection-btn"
+                  style={{ padding: '8px 20px', fontSize: '13px' }}
+                >
+                  Inspect Building
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleRoadInspect}
+                  id="road-inspect-btn"
+                  style={{
+                    padding: '8px 20px',
+                    fontSize: '13px',
+                    background: 'rgba(251, 191, 36, 0.1)',
+                    color: 'var(--accent-orange)',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                  }}
+                >
+                  Inspect Road
+                </button>
+              </div>
             ) : (
               <button
                 className="btn btn-danger"

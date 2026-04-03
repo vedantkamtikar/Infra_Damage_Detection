@@ -797,3 +797,94 @@
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
+
+/* ── Log Tab Switcher ─────────────────────── */
+
+.log-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+}
+
+.log-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.log-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.log-tab.active {
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+}
+
+.log-tab-icon {
+  font-size: 18px;
+}
+
+.log-tab-label {
+  white-space: nowrap;
+}
+
+.log-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.log-tab.active .log-tab-count {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--accent-cyan);
+}
+
+/* ── Pothole-specific tag ─────────────────── */
+
+.tag.pothole-tag {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--accent-orange);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.pothole-detail-row {
+  background: rgba(245, 158, 11, 0.03);
+}
+
+@media (max-width: 600px) {
+  .log-tabs {
+    flex-direction: column;
+  }
+  .log-tab-label {
+    font-size: 12px;
+  }
+}
+

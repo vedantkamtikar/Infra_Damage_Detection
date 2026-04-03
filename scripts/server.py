@@ -49,11 +49,19 @@ app.add_middleware(
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DB_PATH  = ROOT_DIR / "detections.db"
+ROAD_DB_PATH = ROOT_DIR / "road_inspection.db"
 
 
 def get_db():
     """Get a connection to the detections database."""
     conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def get_road_db():
+    """Get a connection to the road inspection database."""
+    conn = sqlite3.connect(str(ROAD_DB_PATH))
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -166,6 +174,101 @@ def get_stats():
         "unique_classes": classes,
         "class_counts": class_counts,
         "confidence_distribution": bins,
+    }
+
+
+# ─────────────────────────────────────────────
+# POTHOLE DETECTION LOGS (road_inspection.db)
+# ─────────────────────────────────────────────
+
+@app.get("/pothole-logs")
+def get_pothole_logs(
+    limit: int = Query(20, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    min_conf: float = Query(0.0, ge=0.0, le=1.0),
+):
+    """Return pothole detection logs from road_inspection.db."""
+    if not ROAD_DB_PATH.exists():
+        return {"logs": [], "total": 0, "limit": limit, "offset": offset}
+
+    conn = get_road_db()
+    cursor = conn.cursor()
+
+    # Check if potholes table exists
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='potholes'")
+    if not cursor.fetchone():
+        conn.close()
+        return {"logs": [], "total": 0, "limit": limit, "offset": offset}
+
+    cursor.execute(
+        """SELECT id, timestamp, confidence, drone_x, drone_y, drone_z, frame
+           FROM potholes
+           WHERE confidence >= ?
+           ORDER BY id DESC
+           LIMIT ? OFFSET ?""",
+        (min_conf, limit, offset),
+    )
+    rows = cursor.fetchall()
+
+    cursor.execute(
+        "SELECT COUNT(*) FROM potholes WHERE confidence >= ?",
+        (min_conf,),
+    )
+    total = cursor.fetchone()[0]
+    conn.close()
+
+    output = []
+    for row in rows:
+        image_b64 = ""
+        if row["frame"]:
+            image_b64 = base64.b64encode(row["frame"]).decode("utf-8")
+
+        output.append({
+            "id": row["id"],
+            "timestamp": row["timestamp"],
+            "label": "pothole",
+            "confidence": round(row["confidence"], 4),
+            "location": {
+                "x": round(row["drone_x"], 2),
+                "y": round(row["drone_y"], 2),
+                "z": round(row["drone_z"], 2),
+            },
+            "image": f"data:image/jpeg;base64,{image_b64}" if image_b64 else None,
+        })
+
+    return {"logs": output, "total": total, "limit": limit, "offset": offset}
+
+
+@app.get("/pothole-stats")
+def get_pothole_stats():
+    """Aggregate pothole detection statistics."""
+    if not ROAD_DB_PATH.exists():
+        return {"total_detections": 0, "avg_confidence": 0, "max_confidence": 0, "min_confidence": 0}
+
+    conn = get_road_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='potholes'")
+    if not cursor.fetchone():
+        conn.close()
+        return {"total_detections": 0, "avg_confidence": 0, "max_confidence": 0, "min_confidence": 0}
+
+    cursor.execute("SELECT COUNT(*) FROM potholes")
+    total = cursor.fetchone()[0]
+
+    if total == 0:
+        conn.close()
+        return {"total_detections": 0, "avg_confidence": 0, "max_confidence": 0, "min_confidence": 0}
+
+    cursor.execute("SELECT AVG(confidence), MAX(confidence), MIN(confidence) FROM potholes")
+    avg_c, max_c, min_c = cursor.fetchone()
+    conn.close()
+
+    return {
+        "total_detections": total,
+        "avg_confidence": round(avg_c, 4),
+        "max_confidence": round(max_c, 4),
+        "min_confidence": round(min_c, 4),
     }
 
 
@@ -379,6 +482,35 @@ def start_mission():
         )
         _mission_start_time = time.time()
         return {"started": True, "pid": _mission_process.pid}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.post("/mission/road-inspect/start")
+def start_road_inspection():
+    """Launch drone/road_inspect.py as a subprocess."""
+    global _mission_process, _mission_start_time
+    if _mission_process is not None and _mission_process.poll() is None:
+        return {"error": "A mission is already running", "pid": _mission_process.pid}
+
+    road_script = ROOT_DIR / "drone" / "road_inspect.py"
+    if not road_script.exists():
+        return {"error": f"road_inspect.py not found at {road_script}"}
+
+    # Remove stale frame
+    if FRAME_PATH.exists():
+        FRAME_PATH.unlink()
+
+    try:
+        _mission_process = subprocess.Popen(
+            ["python", str(road_script)],
+            cwd=str(ROOT_DIR),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+        )
+        _mission_start_time = time.time()
+        return {"started": True, "pid": _mission_process.pid, "mission": "road_inspect"}
     except Exception as e:
         return {"error": str(e)}
 
