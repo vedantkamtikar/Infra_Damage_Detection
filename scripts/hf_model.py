@@ -6,7 +6,6 @@ model_path = hf_hub_download(
     filename="best.pt",
     local_dir=".",        # Downloads to current directory
     local_dir_use_symlinks=False, # Ensures it's a real file, not a link
-    token="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"
 )
 
 print(f"Model downloaded to: {model_path}")
